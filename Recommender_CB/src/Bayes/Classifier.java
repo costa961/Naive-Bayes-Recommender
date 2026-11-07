@@ -22,7 +22,7 @@ import java.util.Set;
 
  * functionality for storing categories or features and can be used to calculate
 
- * basic probabilities – both category and feature probabilities. The classify
+ * basic probabilities - both category and feature probabilities. The classify
 
  * function has to be implemented by the concrete classifier class.
 

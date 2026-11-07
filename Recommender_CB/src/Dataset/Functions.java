@@ -19,10 +19,14 @@ import org.w3c.dom.NodeList;
 import Bayes.BayesClassifier;
 import Bayes.Item_Category_Probability;
 import Bayes.Classifier;
+import Bayes.Classification;
 
 
 
 public class Functions{
+
+	/** Numero massimo di raccomandazioni mostrate. */
+	private static final int TOP_N = 10;
 
 	public Movie[] parseXml(Movie[] movie_array){
 
@@ -238,25 +242,26 @@ public class Functions{
 
 		for(int i=0;i<ItemNotRated.size();i++){
 			Item_Category_Probability icp = new Item_Category_Probability();
-			icp.setItem(ItemNotRated.get(i).get(0));
-			ItemNotRated.get(i).remove(0);
-			String[] not_rated = ItemNotRated.get(i).toArray(new String[0]);
-			icp.setCategory(bayes.classify(Arrays.asList(not_rated)).getCategory());
-			icp.setProbability(bayes.classify(Arrays.asList(not_rated)).getProbability());
+			List<String> features = new ArrayList<String>(ItemNotRated.get(i));
+			icp.setItem(features.remove(0));
+			Classification<String, String> c = bayes.classify(features);
+			icp.setCategory(c.getCategory());
+			icp.setProbability(c.getProbability());
 
-			result.add(icp);
+			// Teniamo solo gli item classificati come "like"
+			if("like".equals(icp.getCategory()))
+				result.add(icp);
 		}
 		Collections.sort(result, new Comparator<Item_Category_Probability>(){
 
 			public int compare(Item_Category_Probability icp1, Item_Category_Probability icp2) {
-				return Float.valueOf(icp2.getProbability()).compareTo(icp1.getProbability()); 
+				return Float.compare(icp2.getProbability(), icp1.getProbability());
 			}
-		}); 
+		});
 
 		System.out.println("All' utente potrebbero piacere : ");
-		for(int i=0;i<10;i++){
-			if(result.get(i).getCategory()=="like")
-				System.out.println("[ [ Id: "+result.get(i).getItem()+" ] , "+"[ Category: "+result.get(i).getCategory()+" ] , [ Probability: "+result.get(i).getProbability()+" ] ]");	
+		for(int i=0;i<Math.min(TOP_N, result.size());i++){
+			System.out.println("[ [ Id: "+result.get(i).getItem()+" ] , "+"[ Category: "+result.get(i).getCategory()+" ] , [ Probability: "+result.get(i).getProbability()+" ] ]");
 		}
 
 	}
